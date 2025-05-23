@@ -10,6 +10,7 @@ class Penguin(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     status = Column(String(50), default="normal")  #
     visits = relationship("Visit", back_populates="penguin")
+    notes = relationship("PenguinNote", backref="penguin", cascade="all, delete-orphan")
 
 
 class Visit(Base):
@@ -21,3 +22,13 @@ class Visit(Base):
     image_path = Column(String(255))
 
     penguin = relationship("Penguin", back_populates="visits")
+
+class PenguinNote(Base):
+    __tablename__ = 'penguin_notes'
+    id = Column(Integer, primary_key=True, index=True)
+    penguin_id = Column(Integer, ForeignKey('penguins.id'), nullable=False)
+    user_id = Column(String(100))  # or Integer if you have user accounts
+    note = Column(String(1000))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+

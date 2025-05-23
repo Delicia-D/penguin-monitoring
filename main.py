@@ -17,7 +17,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from collections import defaultdict
 from utils.r2_upload import generate_presigned_url
-
+from schemas import PenguinNoteCreate, PenguinNoteOut
 # Create DB tables
 Base.metadata.create_all(bind=engine)
 
@@ -54,7 +54,7 @@ async def upload_visit(
     rfid: str = Form(...),
     weight: float = Form(...),
     timestamp: str = Form(...),
-    image: UploadFile = File(...),  # ✅ File here, not Form
+    image: UploadFile = File(...),  #
     db: Session = Depends(get_db)
 ):
     # Parse timestamp from string
@@ -208,3 +208,19 @@ def update_status(penguin_id: int, update: StatusUpdate, db: Session = Depends(g
     db.commit()
     db.refresh(penguin)
     return {"message": f"Status updated to {update.status}"}
+
+
+@app.post("/penguin/{penguin_id}/notes", response_model=PenguinNoteOut)
+def create_note(penguin_id: int, note: PenguinNoteCreate, db: Session = Depends(get_db)):
+    return crud.add_penguin_note(db, penguin_id=penguin_id, note=note.note)
+
+@app.get("/penguin/{penguin_id}/notes", response_model=list[PenguinNoteOut])
+def read_notes(penguin_id: int, db: Session = Depends(get_db)):
+    return crud.get_penguin_notes(db, penguin_id)
+
+@app.put("/penguin/{penguin_id}/notes/{note_id}", response_model=PenguinNoteOut)
+def edit_note(penguin_id: int, note_id: int, note: PenguinNoteCreate, db: Session = Depends(get_db)):
+    updated_note = crud.update_penguin_note(db, note_id=note_id, note=note.note)
+    if not updated_note:
+        raise HTTPException(status_code=403, detail="Note not found or not editable")
+    return updated_note

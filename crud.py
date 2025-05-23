@@ -37,19 +37,19 @@ def create_visit(db: Session, penguin_id: int, weight: float, timestamp: datetim
     db.refresh(new_visit)
     return new_visit
 def add_penguin_note(db: Session, penguin_id: int, note: str, user_id: str = "anonymous"):
-    new_note = PenguinNote(penguin_id=penguin_id, note=note, user_id=user_id)
+    new_note = PenguinNote(
+        penguin_id=penguin_id,
+        note=note,
+        user_id=user_id
+    )
     db.add(new_note)
     db.commit()
     db.refresh(new_note)
     return new_note
-
 def get_penguin_notes(db: Session, penguin_id: int):
-    return db.query(PenguinNote).filter(PenguinNote.penguin_id == penguin_id).order_by(PenguinNote.created_at.desc()).all()
-
-def update_penguin_note(db: Session, note_id: int, note: str, user_id: str = "anonymous"):
-    note_obj = db.query(PenguinNote).filter(PenguinNote.id == note_id, PenguinNote.user_id == user_id).first()
-    if note_obj:
-        note_obj.note = note
-        db.commit()
-        db.refresh(note_obj)
-    return note_obj
+    return (
+        db.query(PenguinNote)
+        .filter(PenguinNote.penguin_id == penguin_id)
+        .order_by(PenguinNote.created_at.desc())
+        .all()
+    )

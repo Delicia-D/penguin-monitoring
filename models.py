@@ -30,5 +30,5 @@ class PenguinNote(Base):
     user_id = Column(String(100))  # or Integer if you have user accounts
     note = Column(String(1000))
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
 

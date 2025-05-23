@@ -214,13 +214,25 @@ def update_status(penguin_id: int, update: StatusUpdate, db: Session = Depends(g
 def create_note(penguin_id: int, note: PenguinNoteCreate, db: Session = Depends(get_db)):
     return crud.add_penguin_note(db, penguin_id=penguin_id, note=note.note)
 
+
+
+@app.post("/penguin/{penguin_id}/notes", response_model=PenguinNoteOut)
+def create_note(penguin_id: int, note: PenguinNoteCreate, db: Session = Depends(get_db)):
+    # First verify penguin exists
+    penguin = db.query(Penguin).filter(Penguin.id == penguin_id).first()
+    if not penguin:
+        raise HTTPException(status_code=404, detail="Penguin not found")
+    
+    return crud.add_penguin_note(db, penguin_id=penguin_id, note=note.note)
+
 @app.get("/penguin/{penguin_id}/notes", response_model=list[PenguinNoteOut])
 def read_notes(penguin_id: int, db: Session = Depends(get_db)):
-    return crud.get_penguin_notes(db, penguin_id)
+    try:
+        # Verify penguin exists (optional, but recommended)
+        if not db.query(Penguin).filter(Penguin.id == penguin_id).first():
+            raise HTTPException(status_code=404, detail="Penguin not found")
 
-@app.put("/penguin/{penguin_id}/notes/{note_id}", response_model=PenguinNoteOut)
-def edit_note(penguin_id: int, note_id: int, note: PenguinNoteCreate, db: Session = Depends(get_db)):
-    updated_note = crud.update_penguin_note(db, note_id=note_id, note=note.note)
-    if not updated_note:
-        raise HTTPException(status_code=403, detail="Note not found or not editable")
-    return updated_note
+        notes = crud.get_penguin_notes(db, penguin_id)
+        return notes
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
